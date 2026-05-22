@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
+import { Alert } from 'react-native';
 import { useState } from 'react';
 import {
   FlatList,
@@ -35,16 +36,18 @@ export default function App() {
       setNomeRussoOficial(info[0].translations.rus.official);
       setMapa(info[0].maps.openStreetMaps);
       setResultado(info[0]);
-      console.log(info[0]);
     } catch (error) {
-      console.error('Erro ao buscar país:', error);
+      alert(`Erro ao buscar o país: ${pais}`);
       setResultado(null);
     }
   };
 
+
   return (
     <View style={styles.container}>
+
       <View style={styles.quadrado}>
+
         <Text style={styles.titulo}>BUSCADOR DE PAÍSES</Text>
         <TextInput
           style={styles.input}
@@ -53,12 +56,21 @@ export default function App() {
           value={pais}
           onChangeText={setPais}
         />
+
         <Pressable style={styles.botao} onPress={buscarPorNome}>
           <Text style={styles.textoBotao}>BUSCAR POR NOME DO PAIS</Text>
         </Pressable>
         <View style={styles.resultadoContainer}>
+          <Text style={styles.resultadoTitulo}>RESULTADO DA BUSCA</Text>
+          <Text style={styles.label}>Nome Comum: <Text style={styles.valor}>{nomeComum}</Text></Text>
+          <Text style={styles.label}>Nome Oficial: <Text style={styles.valor}>{nomeOficial}</Text></Text>
+          <Text style={styles.label}>Nome Russo (Comum): <Text style={styles.valor}>{nomeRussoComum}</Text></Text>
+          <Text style={styles.label}>Nome Russo (Oficial): <Text style={styles.valor}>{nomeRussoOficial}</Text></Text>
+          <Text style={styles.label}>Mapa: <Text style={styles.link}>{mapa}</Text></Text>
         </View>
+
       </View>
+
     </View>
   );
 }
