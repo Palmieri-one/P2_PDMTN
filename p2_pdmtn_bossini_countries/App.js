@@ -1,9 +1,6 @@
-import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { Alert } from 'react-native';
 import { useState } from 'react';
 import {
-  FlatList,
   Pressable,
   StyleSheet,
   Text,
@@ -14,7 +11,7 @@ import {
 
 export default function App() {
 
-  const [pais, setPais] = useState('');
+  const [busca, setBusca] = useState('');
   const [resultado, setResultado] = useState(null);
   const [nomeComum, setNomeComum] = useState('');
   const [nomeOficial, setNomeOficial] = useState('');
@@ -22,10 +19,12 @@ export default function App() {
   const [nomeRussoOficial, setNomeRussoOficial] = useState('');
   const [mapa, setMapa] = useState('');
   const [bandeira, setBandeira] = useState('');
+  const [tipoBusca, setTipoBusca] = useState(null);
+
 
   const buscarPorNome = async () => {
     try {
-      const nome = pais;
+      const nome = busca;
       const resposta = await fetch(
         `https://restcountries.com/v3.1/name/${nome}`
       );
@@ -35,14 +34,33 @@ export default function App() {
       setNomeRussoComum(info[0].translations.rus.common);
       setNomeRussoOficial(info[0].translations.rus.official);
       setMapa(info[0].maps.openStreetMaps);
+      setBandeira(info[0].flags?.png || '');
       setResultado(info[0]);
+      setTipoBusca('nome');
     } catch (error) {
-      alert(`Erro ao buscar o país: ${pais}`);
+      alert(`Erro ao buscar o país: ${busca}`);
       setResultado(null);
     }
   };
 
-
+  const buscaPorCapital = async () => {
+    try {
+      const capital = busca;
+      const resposta = await fetch(
+        `https://restcountries.com/v3.1/capital/${capital}`
+      );
+      const info = await resposta.json();
+      setNomeComum(info[0].name.common);
+      setNomeOficial(info[0].name.official);
+      setBandeira(info[0].flags?.png || '');
+      setResultado(info[0]);
+      setTipoBusca('capital');
+    } catch (error) {
+      alert(`Erro ao buscar a capital: ${busca}`);
+      setResultado(null);
+    }
+  };
+  
   return (
     <View style={styles.container}>
 
@@ -51,27 +69,56 @@ export default function App() {
         <Text style={styles.titulo}>BUSCADOR DE PAÍSES</Text>
         <TextInput
           style={styles.input}
-          placeholder="Digite o nome do país"
+          placeholder="Digite o nome do país ou capital"
           placeholderTextColor="#00000034"
-          value={pais}
-          onChangeText={setPais}
+          value={busca}
+          onChangeText={setBusca}
         />
 
         <Pressable style={styles.botao} onPress={buscarPorNome}>
-          <Text style={styles.textoBotao}>BUSCAR POR NOME DO PAIS</Text>
+          <Text style={styles.textoBotao}>BUSCAR POR NOME DO PAÍS</Text>
         </Pressable>
+        
+         <Pressable style={styles.botao} onPress={buscaPorCapital}>
+          <Text style={styles.textoBotao}>BUSCAR POR CAPITAL DO PAÍS</Text>
+        </Pressable>
+
         <View style={styles.resultadoContainer}>
-          <Text style={styles.resultadoTitulo}>RESULTADO DA BUSCA</Text>
-          <Text style={styles.label}>Nome Comum: <Text style={styles.valor}>{nomeComum}</Text></Text>
-          <Text style={styles.label}>Nome Oficial: <Text style={styles.valor}>{nomeOficial}</Text></Text>
-          <Text style={styles.label}>Nome Russo (Comum): <Text style={styles.valor}>{nomeRussoComum}</Text></Text>
-          <Text style={styles.label}>Nome Russo (Oficial): <Text style={styles.valor}>{nomeRussoOficial}</Text></Text>
-          <Text style={styles.label}>Mapa: <Text style={styles.link}>{mapa}</Text></Text>
+          <Text style={styles.resultadoTitulo}>RESULTADO DA BUSCA:
+            <br/>
+            {tipoBusca === 'nome' && (
+              <View>
+                <Text style={styles.label}>Nome Comum:</Text>
+                <Text style={styles.valor}>{nomeComum}</Text>
+                <Text style={styles.label}>Nome Oficial:</Text>
+                <Text style={styles.valor}>{nomeOficial}</Text>
+                <Text style={styles.label}>Nome Russo Comum:</Text>
+                <Text style={styles.valor}>{nomeRussoComum}</Text>
+                <Text style={styles.label}>Nome Russo Oficial:</Text>
+                <Text style={styles.valor}>{nomeRussoOficial}</Text>
+                <Text style={styles.label}>Mapa (OpenStreetMap):</Text>
+                <Text style={styles.valor}>{mapa}</Text>
+              </View>
+            )}
+            {tipoBusca === 'capital' && (
+              <View>
+                <Text style={styles.label}>Nome Oficial:</Text>
+                <Text style={styles.valor}>{nomeOficial}</Text>
+                <Text style={styles.label}>Bandeira:</Text>
+                {bandeira ? (
+                  <Image source={{ uri: bandeira }} style={{ width: 200, height: 100 }} />
+                ) : (
+                  <Text style={styles.valor}>Bandeira não disponível</Text>
+                )}
+              </View>
+            )}
+          </Text>
         </View>
-
+        <text style={styles.creditos}>Desenvolvido por Fernando Antonio, Letícia Sudan e Mariana Fernandes</text>
       </View>
-
     </View>
+
+
   );
 }
 
@@ -126,8 +173,8 @@ const styles = StyleSheet.create({
   },
 
   resultadoContainer: {
-    textAlign: 'top',
-    itemsAlign: 'center',
+    textAlign: 'center',
+    alignItems: 'center',
     marginTop: 30,
     width: '100%',
     backgroundColor: '#ffffff',
@@ -145,13 +192,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  infoBox: {
-    marginBottom: 15,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-
   label: {
     fontSize: 14,
     fontWeight: 'bold',
@@ -163,11 +203,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666666',
   },
-
-  link: {
-    fontSize: 12,
-    color: '#0066cc',
-  },
+  creditos:{
+    flex: 1,
+    marginTop: 70,
+    textcolor: '#100014b7',
+    color: '#100014b7',
+    textAlign: 'center',
+  }
 });
 
 
